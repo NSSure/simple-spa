@@ -1,0 +1,18 @@
+<div>
+    <h1>Hello, {{recipient}}!</h1>
+    <p>{{message}}</p>
+    <p>Counter: {{counter}}</p>
+
+    <div>
+        <input type="text" s-bind="message" />
+    </div>
+
+    <br>
+
+    <button s-click="fire()">Fire Event</button>
+
+    <ul>
+        <li><a s-ref="/">Myself</a></li>
+        <li><a s-ref="/binding-example">Binding</a></li>
+    </ul>
+</div>
