@@ -5,6 +5,11 @@ export default class HelloWorldComponent extends SPAComponent {
     message: string = 'Welcome to the SPA demo project.';
     counter: number = 0;
 
+    items: Array<any> = [
+        { name: 'Item #1', description: 'The first item in the list.' },
+        { name: 'Item #2', description: 'The first item in the list.' }
+    ]
+
     constructor() {
         super();
 
@@ -12,7 +17,11 @@ export default class HelloWorldComponent extends SPAComponent {
         this.templateUrl = './src/components/hello-world/hello-world.component.html';
     }
 
-    fire() {
+    incrementCounter() {
         this.counter++;
+    }
+
+    itemClicked(item: any) {
+        console.log(item);
     }
 }
