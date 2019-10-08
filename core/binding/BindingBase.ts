@@ -4,14 +4,16 @@ import SPApplication from "../SPApplication";
 import Debug from "../debug/Debug";
 
 export default class BindingBase {
-    component: IComponent;
-    templateFragment: DocumentFragment;
-    proxy: any;
+    private component: IComponent;
+    private templateFragment: DocumentFragment;
+    private proxy: any;
 
-    sourceTextNodes: any = {}; // Contains the source of the expressions.
-    virtualTextNodes: any = {}; // Contains results of the process expressions.
+    private sourceTextNodes: any = {}; // Contains the source of the expressions.
+    private virtualTextNodes: any = {}; // Contains results of the process expressions.
 
-    expressions: Array<any> = new Array();
+    private expressions: Array<any> = new Array();
+
+    private expressionTokenRegex: RegExp = /{{(.*?)}}/;
 
     handler = {
         get(target: any, name: string) {
@@ -33,18 +35,22 @@ export default class BindingBase {
     }
 
     bootstrapBindings() {
-        this.queryAttributes();
-        this.queryTextNodes();
-    }
-
-    queryAttributes() {
+        this.queryComponents();
         this.queryBindings();
         this.queryIterators();
         this.queryEvents();
         this.queryNavigationLinks();
+        this.queryTextNodes();
     }
 
-    queryBindings() {
+    private queryComponents() {
+        // SPApplication.components.forEach((component) => {
+        //     const componentTag = this.templateFragment.querySelectorAll(component.prototype.tagName)[];
+        //     console.log(componentTag);
+        // });
+    }
+
+    private queryBindings() {
         const bindableElements = this.templateFragment.querySelectorAll('[s-bind]');
 
         bindableElements.forEach((bindableElement: any) => {
@@ -70,45 +76,7 @@ export default class BindingBase {
         });
     }
 
-    updateOneWayBinding(bindableProperty: string, value: any) {
-        let dotNotationComponents = bindableProperty.split('.');
-        let object: any = undefined;
-        let accessor: string = undefined;
-
-        /**
-         * If we have a one way expresssion like so {{location.city}} we need to access this.proxy like so this.proxy['location']
-         * and then use that reference access the city property by string.
-         */
-        dotNotationComponents.forEach((dotNotationComponent: string) => {
-            if (object) {
-                if (typeof object[dotNotationComponent] === 'object') {
-                    object = object[dotNotationComponent];
-                }
-                else {
-                    accessor = dotNotationComponent;
-                }
-            }
-            else {
-                object = this.proxy[dotNotationComponent];
-            }
-        });
-
-        // Update any text node with the one way expression i.e {{location.city}}.
-        let pendingExpressionUpdate = this.sourceTextNodes[bindableProperty].cloneNode(true);
-        pendingExpressionUpdate.nodeValue = pendingExpressionUpdate.nodeValue.replace(/{{(.*?)}}/, value);
-        this.virtualTextNodes[bindableProperty].nodeValue = pendingExpressionUpdate.nodeValue;
-
-        if (typeof object === 'object') {
-            // Update the component proxy property. The component might have a location object with city property so 'object' would be equal to 'location'
-            // and the 'accessor' would a string of 'city'.
-            object[accessor] = value;
-        }
-        // else {
-        //     this.proxy[bindableProperty] = value;
-        // }
-    }
-
-    queryIterators() {
+    private queryIterators() {
         // console.log('[Querying iterators]');
 
         const iterableElements = this.templateFragment.querySelectorAll('[s-for]');
@@ -151,7 +119,7 @@ export default class BindingBase {
     }
 
     // TODO: This some how needs to communicate with the component instance created by the router.
-    queryEvents() {
+    private queryEvents() {
         // console.log('[Querying events]');
 
         const eventElements = this.templateFragment.querySelectorAll('[s-click]');
@@ -169,7 +137,7 @@ export default class BindingBase {
         });
     }
 
-    queryTextNodes() {
+    private queryTextNodes() {
         const textWalker = document.createTreeWalker(this.templateFragment, NodeFilter.SHOW_TEXT, null, false);
 
         var textNode = null;
@@ -197,7 +165,7 @@ export default class BindingBase {
                         }
                     });
 
-                    textNode.nodeValue = textNode.nodeValue.replace(/{{(.*?)}}/, defaultValue);
+                    textNode.nodeValue = textNode.nodeValue.replace(this.expressionTokenRegex, defaultValue);
                     this.virtualTextNodes[oneWayBindingExpression] = textNode;
                 }
             }
@@ -206,7 +174,7 @@ export default class BindingBase {
         // this.proxy.value = 'proxy value updated';
     }
 
-    queryNavigationLinks() {
+    private queryNavigationLinks() {
         let navigationLinks = this.templateFragment.querySelectorAll('[s-ref]');
 
         navigationLinks.forEach((navigationLink: HTMLElement) => {
@@ -216,5 +184,43 @@ export default class BindingBase {
                 SPApplication.router.goByUrl(navigationState);
             });
         })
+    }
+
+    private updateOneWayBinding(bindableProperty: string, value: any) {
+        let dotNotationComponents = bindableProperty.split('.');
+        let object: any = undefined;
+        let accessor: string = undefined;
+
+        /**
+         * If we have a one way expresssion like so {{location.city}} we need to access this.proxy like so this.proxy['location']
+         * and then use that reference access the city property by string.
+         */
+        dotNotationComponents.forEach((dotNotationComponent: string) => {
+            if (object) {
+                if (typeof object[dotNotationComponent] === 'object') {
+                    object = object[dotNotationComponent];
+                }
+                else {
+                    accessor = dotNotationComponent;
+                }
+            }
+            else {
+                object = this.proxy[dotNotationComponent];
+            }
+        });
+
+        // Update any text node with the one way expression i.e {{location.city}}.
+        let pendingExpressionUpdate = this.sourceTextNodes[bindableProperty].cloneNode(true);
+        pendingExpressionUpdate.nodeValue = pendingExpressionUpdate.nodeValue.replace(this.expressionTokenRegex, value);
+        this.virtualTextNodes[bindableProperty].nodeValue = pendingExpressionUpdate.nodeValue;
+
+        if (typeof object === 'object') {
+            // Update the component proxy property. The component might have a location object with city property so 'object' would be equal to 'location'
+            // and the 'accessor' would a string of 'city'.
+            object[accessor] = value;
+        }
+        // else {
+        //     this.proxy[bindableProperty] = value;
+        // }
     }
 }

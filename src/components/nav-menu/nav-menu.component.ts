@@ -1,16 +1,10 @@
 import SPAComponent from "../../../core/component/SPAComponent";
+import Component from "../../../core/decorators/component.decorator";
 
+@Component('nav-menu')
 export default class NavMenuComponent extends SPAComponent {
     constructor() {
         super();
-
-        this.tagName = 'nav-menu';
-        this.template = 
-        `
-            <ul>
-                <li><a>Home</a></li>
-                <li><a>List</a></li>
-            </ul>
-        `;
+        this.templateUrl = './src/components/nav-menu/nav-menu.component.html';
     }
 }

@@ -1,5 +1,7 @@
 import SPAComponent from "../../../core/component/SPAComponent";
+import Component from "../../../core/decorators/component.decorator";
 
+@Component('hello-world')
 export default class HelloWorldComponent extends SPAComponent {
     recipient: string = 'World';
     message: string = 'Welcome to the SPA demo project.';
@@ -12,8 +14,6 @@ export default class HelloWorldComponent extends SPAComponent {
 
     constructor() {
         super();
-
-        this.tagName = 'hello-world';
         this.templateUrl = './src/components/hello-world/hello-world.component.html';
     }
 
