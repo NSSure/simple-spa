@@ -2,6 +2,7 @@
 import IComponent from "../interfaces/IComponent";
 import SPApplication from "../SPApplication";
 import Debug from "../debug/Debug";
+import TemplateEngine from "./TemplateEngine";
 
 export default class BindingBase {
     private component: IComponent;
@@ -15,6 +16,8 @@ export default class BindingBase {
 
     private expressionTokenRegex: RegExp = /{{(.*?)}}/;
 
+    private children: Array<BindingBase> = new Array();
+
     handler = {
         get(target: any, name: string) {
             return target[name];
@@ -26,12 +29,14 @@ export default class BindingBase {
         }
     }
 
-    constructor(component: IComponent, templateFragment: DocumentFragment) {
+    constructor(component: IComponent) {
         this.component = component;
-        this.templateFragment = templateFragment;
 
         this.proxy = new Proxy(this.component, this.handler);
         this.component = this.proxy;
+
+        // Load the template for this binding context.
+        TemplateEngine.loadTemplate(component, this.templateLoadedCallback);
     }
 
     bootstrapBindings() {
@@ -43,11 +48,27 @@ export default class BindingBase {
         this.queryTextNodes();
     }
 
+    templateLoadedCallback(componentTemplateFragment: DocumentFragment) {
+        this.templateFragment = componentTemplateFragment;
+        this.bootstrapBindings();
+    }
+
     private queryComponents() {
-        // SPApplication.components.forEach((component) => {
-        //     const componentTag = this.templateFragment.querySelectorAll(component.prototype.tagName)[];
-        //     console.log(componentTag);
-        // });
+        SPApplication.components.forEach((component) => {
+            let componentTag = this.templateFragment.querySelectorAll(component.prototype.tagName);
+            
+            // If we find a registered component in the current template fragment for the binding context we need to initialize that component and it to the DOM.
+            if (componentTag) {
+                let componentInstance = new component();
+                
+                new BindingBase(componentInstance, componentTemplateFragment);
+                // bindingContext.bootstrapBindings();
+        
+                if (typeof componentInstance.onAppearing == 'function') {
+                    componentInstance.onAppearing();
+                }
+            }
+        });
     }
 
     private queryBindings() {

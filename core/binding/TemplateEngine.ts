@@ -1,12 +1,15 @@
-import Route from "../router/Route";
 import SPApplication from "../SPApplication";
-import BindingBase from "./BindingBase";
 import IComponent from "../interfaces/IComponent";
 import Debug from "../debug/Debug";
-import SPAComponent from "../component/SPAComponent";
 
 export default class TemplateEngine {
-    static loadTemplate(componentInstance: IComponent) {
+    static loadDefaultTemplate(defaultComponentInstance: IComponent) {
+        TemplateEngine.loadTemplate(defaultComponentInstance, (defaultComponentFragment) => {
+            SPApplication.root.appendChild(defaultComponentFragment);
+        });
+    }
+
+    static loadTemplate(componentInstance: IComponent, templateLoadedCallback: (templateFragment: DocumentFragment) => void): void {
         if (!componentInstance) {
             Debug.writeError(`Cannot load undefined or null component instance.`);
         }
@@ -18,7 +21,7 @@ export default class TemplateEngine {
             }
             else if (componentInstance.template) {
                 // Loading template content directly.
-                TemplateEngine.configureTemplate(componentInstance, componentInstance.template);
+                templateLoadedCallback(TemplateEngine.formatTemplate(componentInstance.template))
             }
             else if (componentInstance.templateUrl) {
                 // Loading template through external template url.
@@ -30,7 +33,7 @@ export default class TemplateEngine {
                     if (xhttp.readyState === 4 && xhttp.status === 200) {
                         if (!loaded) {
                             loaded = true;
-                            TemplateEngine.configureTemplate(componentInstance, xhttp.responseText);
+                            templateLoadedCallback(TemplateEngine.formatTemplate(xhttp.responseText));
                         }
                     }
                 }
@@ -44,28 +47,14 @@ export default class TemplateEngine {
         }
     }
 
-    private static configureTemplate(componentInstance: IComponent, templateContent: string) {
-        // TODO: Make sure this the proper way to clear out the component template from the router root.
-        console.log(SPApplication.root);
-
-        SPApplication.root.innerHTML = "";
-
+    private static formatTemplate(templateContent: string): DocumentFragment {
         const componentRoot: HTMLElement = document.createElement('div');
         componentRoot.style.height = "100%";
         componentRoot.innerHTML = templateContent;
 
         let templateFragment: DocumentFragment = document.createDocumentFragment();
         templateFragment.appendChild(componentRoot);
-        
-        SPApplication.currentBindingBase = new BindingBase(componentInstance, templateFragment);
-        SPApplication.currentBindingBase.bootstrapBindings();
 
-        // Add the processed template html to the routers root element.
-        SPApplication.root.appendChild(templateFragment);
-
-        // Once the template is rendered on the page fire the lifecycle event 'onAppearing'.
-        if (typeof componentInstance.onAppearing == 'function') {
-            componentInstance.onAppearing();
-        }
+        return templateFragment;
     }
 }

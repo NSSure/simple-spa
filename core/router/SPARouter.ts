@@ -44,8 +44,8 @@ export default class SPARouter {
             // let component = new defaultRoute.component();
             // SPApplication.root.innerHTML = component.template;
 
-            TemplateEngine.loadTemplate(new defaultRoute.component());
-            this.finalizeRoutingChange(defaultRoute, null);
+            // TemplateEngine.loadTemplate(new defaultRoute.component());
+            // this.finalizeRoutingChange(defaultRoute, null);
         }
     }
 
@@ -62,8 +62,8 @@ export default class SPARouter {
         let route = this.routes.find((x: any) => x[property] === value);
 
         if (route) {
-            TemplateEngine.loadTemplate(new route.component());
-            this.finalizeRoutingChange(route, null);
+            // TemplateEngine.loadTemplate(new route.component());
+            // this.finalizeRoutingChange(route, null);
         }
     }
 
