@@ -1,12 +1,13 @@
-  
+
 import IComponent from "../interfaces/IComponent";
 import SPApplication from "../SPApplication";
 import Debug from "../debug/Debug";
 import TemplateEngine from "./TemplateEngine";
 
 export default class BindingBase {
+    public templateFragment: DocumentFragment;
+
     private component: IComponent;
-    private templateFragment: DocumentFragment;
     private proxy: any;
 
     private sourceTextNodes: any = {}; // Contains the source of the expressions.
@@ -24,19 +25,33 @@ export default class BindingBase {
         },
         set(target: any, name: string, value: any) {
             target[name] = value;
-            SPApplication.currentBindingBase.updateOneWayBinding(name, value);
+            SPApplication.currentBindingContext.updateOneWayBinding(name, value);
             return true;
         }
     }
 
-    constructor(component: IComponent) {
+    constructor(component: any, skipTemplate?: boolean) {
         this.component = component;
 
         this.proxy = new Proxy(this.component, this.handler);
         this.component = this.proxy;
 
-        // Load the template for this binding context.
-        TemplateEngine.loadTemplate(component, this.templateLoadedCallback);
+        if (!skipTemplate) {
+            // Load the template for this binding context.
+            TemplateEngine.loadTemplate(component, (content: string) => {
+                try {
+                    this.templateFragment = TemplateEngine.formatTemplate(content);
+                    console.log(this.templateFragment);
+                    this.bootstrapBindings();
+                }
+                catch (ex) {
+                    console.log(ex);
+                }
+            });
+        }
+        else {
+            this.bootstrapBindings();
+        }
     }
 
     bootstrapBindings() {
@@ -48,24 +63,28 @@ export default class BindingBase {
         this.queryTextNodes();
     }
 
-    templateLoadedCallback(componentTemplateFragment: DocumentFragment) {
-        this.templateFragment = componentTemplateFragment;
-        this.bootstrapBindings();
-    }
-
     private queryComponents() {
         SPApplication.components.forEach((component) => {
-            let componentTag = this.templateFragment.querySelectorAll(component.prototype.tagName);
-            
-            // If we find a registered component in the current template fragment for the binding context we need to initialize that component and it to the DOM.
-            if (componentTag) {
-                let componentInstance = new component();
-                
-                new BindingBase(componentInstance, componentTemplateFragment);
-                // bindingContext.bootstrapBindings();
-        
-                if (typeof componentInstance.onAppearing == 'function') {
-                    componentInstance.onAppearing();
+            console.log(component.prototype.tagName);
+
+            if (this.component.tagName !== component.prototype.tagName) {
+                let componentTags = this.templateFragment.querySelectorAll(component.prototype.tagName);
+
+                console.log(componentTags);
+
+                if (componentTags.length > 0) {
+                    componentTags.forEach((componentTag) => {
+                        // If we find a registered component in the current template fragment for the binding context we need to initialize that component and it to the DOM.
+                        if (componentTag) {
+                            let componentInstance = new component();
+
+                            this.children.push(new BindingBase(componentInstance));
+
+                            if (typeof componentInstance.onAppearing == 'function') {
+                                componentInstance.onAppearing();
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -159,6 +178,8 @@ export default class BindingBase {
     }
 
     private queryTextNodes() {
+        console.log(this.templateFragment);
+
         const textWalker = document.createTreeWalker(this.templateFragment, NodeFilter.SHOW_TEXT, null, false);
 
         var textNode = null;

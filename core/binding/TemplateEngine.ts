@@ -1,15 +1,19 @@
 import SPApplication from "../SPApplication";
 import IComponent from "../interfaces/IComponent";
 import Debug from "../debug/Debug";
+import BindingBase from "./BindingBase";
 
 export default class TemplateEngine {
     static loadDefaultTemplate(defaultComponentInstance: IComponent) {
-        TemplateEngine.loadTemplate(defaultComponentInstance, (defaultComponentFragment) => {
-            SPApplication.root.appendChild(defaultComponentFragment);
+        TemplateEngine.loadTemplate(defaultComponentInstance, (content) => {
+            SPApplication.defaultBindingContext = new BindingBase(defaultComponentInstance, true);
+            console.log(SPApplication.defaultBindingContext);
+            console.log(SPApplication.defaultBindingContext.templateFragment);
+            SPApplication.root.appendChild(SPApplication.defaultBindingContext.templateFragment);
         });
     }
 
-    static loadTemplate(componentInstance: IComponent, templateLoadedCallback: (templateFragment: DocumentFragment) => void): void {
+    static loadTemplate(componentInstance: any, templateLoadedCallback: (content: string) => void): void {
         if (!componentInstance) {
             Debug.writeError(`Cannot load undefined or null component instance.`);
         }
@@ -21,19 +25,19 @@ export default class TemplateEngine {
             }
             else if (componentInstance.template) {
                 // Loading template content directly.
-                templateLoadedCallback(TemplateEngine.formatTemplate(componentInstance.template))
+                templateLoadedCallback(componentInstance.template)
             }
             else if (componentInstance.templateUrl) {
                 // Loading template through external template url.
                 var url = componentInstance.templateUrl;
                 var xhttp = new XMLHttpRequest();
                 var loaded = false;
-    
+
                 xhttp.onreadystatechange = () => {
                     if (xhttp.readyState === 4 && xhttp.status === 200) {
                         if (!loaded) {
                             loaded = true;
-                            templateLoadedCallback(TemplateEngine.formatTemplate(xhttp.responseText));
+                            templateLoadedCallback(xhttp.responseText);
                         }
                     }
                 }
@@ -42,12 +46,14 @@ export default class TemplateEngine {
                 xhttp.send();
             }
             else {
-                Debug.writeError(`Component '${componentInstance.tagName}' does not have a template or templateUrl configured.`);
+                let errorMsg = `Component '${componentInstance.tagName}' does not have a template or templateUrl configured.`;
+                Debug.writeError(errorMsg);
+                throw new Error(errorMsg)
             }
         }
     }
 
-    private static formatTemplate(templateContent: string): DocumentFragment {
+    public static formatTemplate(templateContent: string): DocumentFragment {
         const componentRoot: HTMLElement = document.createElement('div');
         componentRoot.style.height = "100%";
         componentRoot.innerHTML = templateContent;

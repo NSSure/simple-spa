@@ -1,10 +1,20 @@
-import SPAComponent from "../../core/component/SPAComponent";
 import Component from "../../core/decorators/component.decorator";
+import ILifeCycle from "../../core/interfaces/ILifeCycle";
+import IComponent from "../../core/interfaces/IComponent";
 
-@Component('default')
-export default class DefaultComponent extends SPAComponent {
-    constructor() {
-        super();
-        this.templateUrl = './src/components/default.component.html';
+@Component({
+    tagName: 'default',
+    template: '',
+    templateUrl: './src/components/default.component.html'
+})
+export default class DefaultComponent implements IComponent, ILifeCycle {
+    message: string = 'Test Message';
+
+    onAppearing(): void {
+        
+    }    
+    
+    onDisappearing(): void {
+        
     }
 }
