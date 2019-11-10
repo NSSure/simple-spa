@@ -6,10 +6,7 @@ import BindingBase from "./BindingBase";
 export default class TemplateEngine {
     static loadDefaultTemplate(defaultComponentInstance: IComponent) {
         TemplateEngine.loadTemplate(defaultComponentInstance, (content) => {
-            SPApplication.defaultBindingContext = new BindingBase(defaultComponentInstance, true);
-            console.log(SPApplication.defaultBindingContext);
-            console.log(SPApplication.defaultBindingContext.templateFragment);
-            SPApplication.root.appendChild(SPApplication.defaultBindingContext.templateFragment);
+            SPApplication.defaultBindingContext = new BindingBase(defaultComponentInstance, SPApplication.root, content);
         });
     }
 

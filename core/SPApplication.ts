@@ -24,8 +24,8 @@ export default class SPApplication {
             
             if (router) {
                 // TODO: Implement search for router-outlet element when using the router.
-                // SPApplication.router = router;
-                // SPApplication.router.bootstrap();
+                SPApplication.router = router;
+                SPApplication.router.bootstrap();
             }
         }
         catch(ex) {

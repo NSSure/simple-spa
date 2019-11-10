@@ -26,27 +26,27 @@ export default class SPARouter {
     }
 
     bootstrap(): void {
-        // Debug.writeTrace('Bootstrapping router.');
+        Debug.writeTrace('Bootstrapping router.');
 
-        // let defaultRouteCount = this.routes.filter(x => x.displayUrl === '').length;
+        let defaultRouteCount = this.routes.filter(x => x.displayUrl === '').length;
 
-        // if (defaultRouteCount === 0)
-        // {
-        //     Debug.writeError('No default route configured.');
-        // }
-        // else if (defaultRouteCount > 1) {
-        //     Debug.writeError('More than one default route configured.');
-        // }
-        // else
-        // {
-        //     let defaultRoute: Route = this.routes.find(x => x.displayUrl === '');
+        if (defaultRouteCount === 0)
+        {
+            Debug.writeError('No default route configured.');
+        }
+        else if (defaultRouteCount > 1) {
+            Debug.writeError('More than one default route configured.');
+        }
+        else
+        {
+            let defaultRoute: Route = this.routes.find(x => x.displayUrl === '');
 
-        //     // let component = new defaultRoute.component();
-        //     // SPApplication.root.innerHTML = component.template;
+            // let component = new defaultRoute.component();
+            // SPApplication.root.innerHTML = component.template;
 
-        //     // TemplateEngine.loadTemplate(new defaultRoute.component());
-        //     // this.finalizeRoutingChange(defaultRoute, null);
-        // }
+            // TemplateEngine.loadTemplate(new defaultRoute.component());
+            // this.finalizeRoutingChange(defaultRoute, null);
+        }
     }
 
     goByName = (name: string, params?: any) => {

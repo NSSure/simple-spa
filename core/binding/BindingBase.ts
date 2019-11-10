@@ -30,27 +30,29 @@ export default class BindingBase {
         }
     }
 
-    constructor(component: any, skipTemplate?: boolean) {
+    constructor(component: any, componentHTMLSlot: HTMLElement, content?: string) {
         this.component = component;
 
         this.proxy = new Proxy(this.component, this.handler);
         this.component = this.proxy;
 
-        if (!skipTemplate) {
+        if (!content) {
             // Load the template for this binding context.
             TemplateEngine.loadTemplate(component, (content: string) => {
                 try {
                     this.templateFragment = TemplateEngine.formatTemplate(content);
-                    console.log(this.templateFragment);
                     this.bootstrapBindings();
+                    componentHTMLSlot.parentNode.replaceChild(this.templateFragment, componentHTMLSlot);
                 }
                 catch (ex) {
-                    console.log(ex);
+                    throw ex;
                 }
             });
         }
         else {
+            this.templateFragment = TemplateEngine.formatTemplate(content);
             this.bootstrapBindings();
+            componentHTMLSlot.parentNode.replaceChild(this.templateFragment, componentHTMLSlot);
         }
     }
 
@@ -65,26 +67,19 @@ export default class BindingBase {
 
     private queryComponents() {
         SPApplication.components.forEach((component) => {
-            console.log(component.prototype.tagName);
-
             if (this.component.tagName !== component.prototype.tagName) {
                 let componentTags = this.templateFragment.querySelectorAll(component.prototype.tagName);
 
-                console.log(componentTags);
-
                 if (componentTags.length > 0) {
-                    componentTags.forEach((componentTag) => {
+                    for (let i = 0; i < componentTags.length; i++) {
+                        let componentHTMLSlot: HTMLElement = componentTags[i];
+
                         // If we find a registered component in the current template fragment for the binding context we need to initialize that component and it to the DOM.
-                        if (componentTag) {
+                        if (componentHTMLSlot) {
                             let componentInstance = new component();
-
-                            this.children.push(new BindingBase(componentInstance));
-
-                            if (typeof componentInstance.onAppearing == 'function') {
-                                componentInstance.onAppearing();
-                            }
+                            this.children.push(new BindingBase(componentInstance, componentHTMLSlot));
                         }
-                    });
+                    }
                 }
             }
         });
@@ -178,8 +173,6 @@ export default class BindingBase {
     }
 
     private queryTextNodes() {
-        console.log(this.templateFragment);
-
         const textWalker = document.createTreeWalker(this.templateFragment, NodeFilter.SHOW_TEXT, null, false);
 
         var textNode = null;

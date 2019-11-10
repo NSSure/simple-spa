@@ -1,27 +1,28 @@
 import SPApplication from "../core/SPApplication";
 import SPARouter from "../core/router/SPARouter";
 import Route from "../core/router/Route";
-import BindingExampleComponent from "./components/binding-example/binding-example.component";
 import DefaultComponent from "./components/default.component";
 import NavMenuComponent from "./components/nav-menu/nav-menu.component";
 import IComponent from "../core/interfaces/IComponent";
+import DashboardComponent from "./components/dashboard/dashboard.component";
+import HelloWorldComponent from "./components/hello-world/hello-world.component";
 
 let components: Array<IComponent> = [
     DefaultComponent,
-    BindingExampleComponent,
+    DashboardComponent,
     NavMenuComponent
 ]
 
 let routes: Array<Route> = [
     {
-        name: 'default',
+        name: 'dashboard',
         displayUrl: '',
-        component: DefaultComponent
+        component: DashboardComponent
     },
     {
-        name: 'binding-example',
-        displayUrl: '/binding-example',
-        component: BindingExampleComponent
+        name: 'hello-world',
+        displayUrl: '/hello-world',
+        component: HelloWorldComponent
     }
 ];
 
