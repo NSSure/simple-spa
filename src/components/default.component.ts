@@ -8,7 +8,7 @@ import IComponent from "../../core/interfaces/IComponent";
     templateUrl: './src/components/default.component.html'
 })
 export default class DefaultComponent implements IComponent, ILifeCycle {
-    message: string = 'Test Message';
+    message: string = 'This is a test message from within the default component! It is visible across all routes. Expressions are denoted by the double curly brace syntax';
 
     onAppearing(): void {
         

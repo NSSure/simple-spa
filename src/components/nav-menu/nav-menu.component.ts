@@ -1,4 +1,3 @@
-import SPAComponent from "../../../core/component/SPAComponent";
 import Component from "../../../core/decorators/component.decorator";
 import IComponent from "../../../core/interfaces/IComponent";
 

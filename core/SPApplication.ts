@@ -23,9 +23,7 @@ export default class SPApplication {
             TemplateEngine.loadDefaultTemplate(this.defaultComponentInstance);
             
             if (router) {
-                // TODO: Implement search for router-outlet element when using the router.
                 SPApplication.router = router;
-                SPApplication.router.bootstrap();
             }
         }
         catch(ex) {

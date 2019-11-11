@@ -2,8 +2,10 @@ import Route from "./Route";
 import Debug from "../debug/Debug";
 import SPApplication from "../SPApplication";
 import TemplateEngine from "../binding/TemplateEngine";
+import BindingBase from "../binding/BindingBase";
 
 export default class SPARouter {
+    rootOutletElement: HTMLElement;
     routes: Array<Route> = new Array<Route>();
     currentRoute: Route = undefined;
 
@@ -62,8 +64,8 @@ export default class SPARouter {
         let route = this.routes.find((x: any) => x[property] === value);
 
         if (route) {
-            // TemplateEngine.loadTemplate(new route.component());
-            // this.finalizeRoutingChange(route, null);
+            new BindingBase(new route.component(), this.rootOutletElement);
+            this.finalizeRoutingChange(route, null);
         }
     }
 

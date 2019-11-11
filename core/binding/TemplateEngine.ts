@@ -4,9 +4,10 @@ import Debug from "../debug/Debug";
 import BindingBase from "./BindingBase";
 
 export default class TemplateEngine {
-    static loadDefaultTemplate(defaultComponentInstance: IComponent) {
+    static loadDefaultTemplate(defaultComponentInstance: any) {
         TemplateEngine.loadTemplate(defaultComponentInstance, (content) => {
             SPApplication.defaultBindingContext = new BindingBase(defaultComponentInstance, SPApplication.root, content);
+            SPApplication.router.bootstrap();
         });
     }
 

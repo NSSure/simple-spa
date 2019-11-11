@@ -1,40 +1,31 @@
 
-import IComponent from "../interfaces/IComponent";
 import SPApplication from "../SPApplication";
 import Debug from "../debug/Debug";
 import TemplateEngine from "./TemplateEngine";
+import Route from "../router/Route";
 
 export default class BindingBase {
     public templateFragment: DocumentFragment;
 
-    private component: IComponent;
+    private component: any;
     private proxy: any;
-
     private sourceTextNodes: any = {}; // Contains the source of the expressions.
     private virtualTextNodes: any = {}; // Contains results of the process expressions.
-
     private expressions: Array<any> = new Array();
-
     private expressionTokenRegex: RegExp = /{{(.*?)}}/;
-
     private children: Array<BindingBase> = new Array();
 
-    handler = {
-        get(target: any, name: string) {
-            return target[name];
-        },
-        set(target: any, name: string, value: any) {
-            target[name] = value;
-            SPApplication.currentBindingContext.updateOneWayBinding(name, value);
-            return true;
-        }
-    }
-
     constructor(component: any, componentHTMLSlot: HTMLElement, content?: string) {
-        this.component = component;
-
-        this.proxy = new Proxy(this.component, this.handler);
-        this.component = this.proxy;
+        this.proxy = new Proxy(component, {
+            get(target: any, name: string) {
+                return target[name];
+            },
+            set(target: any, name: string, value: any) {
+                target[name] = value;
+                SPApplication.currentBindingContext.updateOneWayBinding(name, value);
+                return true;
+            }
+        });
 
         if (!content) {
             // Load the template for this binding context.
@@ -58,6 +49,7 @@ export default class BindingBase {
 
     bootstrapBindings() {
         this.queryComponents();
+        this.queryRouterOutlets();
         this.queryBindings();
         this.queryIterators();
         this.queryEvents();
@@ -67,7 +59,7 @@ export default class BindingBase {
 
     private queryComponents() {
         SPApplication.components.forEach((component) => {
-            if (this.component.tagName !== component.prototype.tagName) {
+            if (this.proxy.tagName !== component.prototype.tagName) {
                 let componentTags = this.templateFragment.querySelectorAll(component.prototype.tagName);
 
                 if (componentTags.length > 0) {
@@ -85,6 +77,32 @@ export default class BindingBase {
         });
     }
 
+    private queryRouterOutlets() {
+        // Only process router outlet if the user has defined a router for their application.
+        if (SPApplication.router) {
+            let routerOutlet = this.templateFragment.querySelectorAll('router-outlet')[0] as HTMLElement;
+
+            if (SPApplication.defaultComponentInstance.tagName === this.proxy.tagName) {
+                if (!routerOutlet) {
+                    throw new Error('Router is not defined for this component please define a router outlet');
+                }
+
+                SPApplication.router.rootOutletElement = routerOutlet;
+                let defaultRoute = SPApplication.router.routes.find(x => x.displayUrl === '');
+                this.children.push(new BindingBase(new defaultRoute.component(), routerOutlet));
+            }
+            else {
+                if (routerOutlet) {
+                    let bindingBaseRoute: Route = SPApplication.router.routes.find(x => x.tagName === this.proxy.tagName);
+            
+                    if (!bindingBaseRoute) {
+                        throw new Error(`This current binding context (${this.proxy.tagName}) is not a registered route so <router-outlet> can not be used.`);
+                    }
+                }
+            }
+        }
+    }
+
     private queryBindings() {
         const bindableElements = this.templateFragment.querySelectorAll('[s-bind]');
 
@@ -99,7 +117,7 @@ export default class BindingBase {
                     defaultValue = defaultValue[dotNotationComponent];
                 }
                 else {
-                    defaultValue = this.component[dotNotationComponent];
+                    defaultValue = this.proxy[dotNotationComponent];
                 }
             });
 
@@ -130,7 +148,7 @@ export default class BindingBase {
 
                 const virtualFragment = document.createDocumentFragment();
 
-                this.component[iterableBase].forEach((item: any, index: number) => {
+                this.proxy[iterableBase].forEach((item: any, index: number) => {
                     const element = iterableElement.cloneNode(true);
 
                     // TODO: Figure out how to integrate two way data binding here as well as with the query text nodes function.
@@ -167,7 +185,7 @@ export default class BindingBase {
 
             eventElement.addEventListener('click', () => {
                 // TODO: Figure out how to add this this[parameter] back into the line below.
-                Function(this.component[functionDeclaration]());
+                Function(this.proxy[functionDeclaration]());
             });
         });
     }
@@ -196,7 +214,7 @@ export default class BindingBase {
                             defaultValue = defaultValue[dotNotationComponent];
                         }
                         else {
-                            defaultValue = this.component[dotNotationComponent];
+                            defaultValue = this.proxy[dotNotationComponent];
                         }
                     });
 

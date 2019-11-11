@@ -15,12 +15,12 @@ let components: Array<IComponent> = [
 
 let routes: Array<Route> = [
     {
-        name: 'dashboard',
+        tagName: 'dashboard',
         displayUrl: '',
         component: DashboardComponent
     },
     {
-        name: 'hello-world',
+        tagName: 'hello-world',
         displayUrl: '/hello-world',
         component: HelloWorldComponent
     }

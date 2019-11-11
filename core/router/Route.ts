@@ -1,11 +1,11 @@
 export default class Route {
-    constructor(name: string, displayUrl: string, component: any) {
-        this.name = name;
+    constructor(tagName: string, displayUrl: string, component: any) {
+        this.tagName = tagName;
         this.displayUrl = displayUrl;
         this.component = component;
     }
 
-    name: string;
+    tagName: string;
     displayUrl: string;
     component: any;
 }
